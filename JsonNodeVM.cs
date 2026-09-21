@@ -40,7 +40,12 @@ public sealed class JsonNodeVM : INotifyPropertyChanged
         get => _keyBrush;
         private set { if (_keyBrush != value) { _keyBrush = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(KeyBrush))); } }
     }
-    public FontWeight KeyWeight { get; }
+    private FontWeight _keyWeight;
+    public FontWeight KeyWeight
+    {
+        get => _keyWeight;
+        private set { if (_keyWeight != value) { _keyWeight = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(KeyWeight))); } }
+    }
 
     /// <summary>" : " 分隔符，仅在右侧有内容时显示。</summary>
     public Visibility SepVisibility { get; private set; } = Visibility.Collapsed;
@@ -102,7 +107,7 @@ public sealed class JsonNodeVM : INotifyPropertyChanged
         Key = key;
         IsRoot = isRoot;
         KeyText = key;
-        KeyWeight = isRoot ? FontWeights.SemiBold : FontWeights.Normal;
+        _keyWeight = isRoot ? FontWeights.SemiBold : FontWeights.Normal;
         var p = ThemeManager.Current;
         KeyBrush = isRoot ? p.RootKey : isIndexKey(key) ? p.IndexKey : p.Key;
 
@@ -323,6 +328,7 @@ public sealed class JsonNodeVM : INotifyPropertyChanged
             {
                 vm.IsKeyModified = true;
                 vm.KeyBrush = ThemeManager.Current.Modified;
+                vm.KeyWeight = FontWeights.SemiBold;
                 bool valueRed = true;
                 // 改名识别：非数组下标的新 key，且同父容器下有“已消失的旧 key”签名与当前节点一致
                 if (!vm.Key.StartsWith('[') && parent is not null &&
