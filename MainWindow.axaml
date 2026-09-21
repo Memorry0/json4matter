@@ -1,0 +1,323 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="JsonFormatter.MainWindow"
+        Title="JsonFormatter" Width="1220" Height="780"
+        MinWidth="900" MinHeight="560"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource BgCanvas}"
+        FontSize="13"
+        UseLayoutRounding="True">
+
+    <Window.Resources>
+
+        <!-- ========== 按钮：同一形状词汇表 ========== -->
+        <ControlTheme x:Key="ToolBtn" TargetType="Button">
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="Padding" Value="14,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Foreground" Value="{DynamicResource BtnFg}"/>
+            <Setter Property="Background" Value="{DynamicResource BtnBg}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BtnBorder}"/>
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border x:Name="bd" CornerRadius="7" BorderThickness="1"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+            <Style Selector="^:pointerover /template/ Border#bd">
+                <Setter Property="Background" Value="{DynamicResource BtnHover}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource AccentBright}"/>
+            </Style>
+            <Style Selector="^:pressed /template/ Border#bd">
+                <Setter Property="Background" Value="{DynamicResource BtnPressed}"/>
+            </Style>
+            <Style Selector="^:disabled">
+                <Setter Property="Opacity" Value="0.45"/>
+            </Style>
+            <Style Selector="^:focus-visible /template/ Border#bd">
+                <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>
+                <Setter Property="BorderThickness" Value="1.5"/>
+            </Style>
+        </ControlTheme>
+
+        <!-- 主操作：全界面唯一 accent 实底 -->
+        <ControlTheme x:Key="PrimaryBtn" TargetType="Button" BasedOn="{StaticResource ToolBtn}">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Background" Value="{DynamicResource Accent}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Style Selector="^:pointerover /template/ Border#bd">
+                <Setter Property="Background" Value="{DynamicResource AccentBright}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource AccentBright}"/>
+            </Style>
+            <Style Selector="^:pressed /template/ Border#bd">
+                <Setter Property="Background" Value="{DynamicResource Accent}"/>
+                <Setter Property="Opacity" Value="0.85"/>
+            </Style>
+        </ControlTheme>
+
+        <!-- 隐藏空值开关：按下态 accent -->
+        <ControlTheme x:Key="ChipToggle" TargetType="ToggleButton">
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="Foreground" Value="{DynamicResource InkCaption}"/>
+            <Setter Property="Background" Value="{DynamicResource BtnBg}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BtnBorder}"/>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border x:Name="bd" CornerRadius="12" BorderThickness="1"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+            <Style Selector="^:pointerover /template/ Border#bd">
+                <Setter Property="BorderBrush" Value="{DynamicResource AccentBright}"/>
+            </Style>
+            <Style Selector="^:checked">
+                <Setter Property="Foreground" Value="White"/>
+                <Setter Property="Background" Value="{DynamicResource Accent}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+            </Style>
+        </ControlTheme>
+
+        <!-- 树展开箭头 -->
+        <ControlTheme x:Key="ChevronTheme" TargetType="ToggleButton">
+            <Setter Property="Width" Value="16"/>
+            <Setter Property="Height" Value="16"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="Transparent">
+                        <Panel Width="16" Height="16">
+                            <Path x:Name="arrow" Data="M 0,0 L 4,4 L 0,8"
+                                  Stroke="#93ACA0" StrokeThickness="1.6"
+                                  HorizontalAlignment="Center" VerticalAlignment="Center"
+                                  RenderTransformOrigin="0.5,0.5">
+                                <Path.RenderTransform>
+                                    <RotateTransform Angle="0"/>
+                                </Path.RenderTransform>
+                            </Path>
+                        </Panel>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+            <Style Selector="^:checked /template/ Path#arrow">
+                <Setter Property="RenderTransform" Value="rotate(90deg)"/>
+            </Style>
+            <Style Selector="^:pointerover /template/ Path#arrow">
+                <Setter Property="Stroke" Value="{DynamicResource AccentBright}"/>
+            </Style>
+        </ControlTheme>
+
+        <!-- ========== 树 ========== -->
+        <ControlTheme x:Key="JsonNodeTheme" TargetType="TreeViewItem">
+            <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <StackPanel>
+                        <Grid>
+                            <Border x:Name="hoverBg" CornerRadius="5" Margin="0,0.5"
+                                    Background="{DynamicResource HoverRow}" Opacity="0">
+                                <Border.Transitions>
+                                    <Transitions>
+                                        <DoubleTransition Property="Opacity" Duration="0:0:0.12"/>
+                                    </Transitions>
+                                </Border.Transitions>
+                            </Border>
+                            <Border x:Name="rowBg" CornerRadius="5" Margin="0,0.5"
+                                    Background="{Binding RowBackground}"
+                                    Padding="6,2,10,2">
+                                <Grid ColumnDefinitions="16,*">
+                                    <ToggleButton x:Name="expander" Theme="{StaticResource ChevronTheme}"
+                                                  IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"/>
+                                        <ContentPresenter Grid.Column="1"
+                                                          Content="{TemplateBinding Header}"
+                                                          ContentTemplate="{TemplateBinding ItemTemplate}"
+                                                          HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+                        </Grid>
+                        <ItemsPresenter x:Name="itemsHost" Margin="16,0,0,0" IsVisible="False"/>
+                    </StackPanel>
+                </ControlTemplate>
+            </Setter>
+            <Style Selector="^:expanded /template/ ItemsPresenter#itemsHost">
+                <Setter Property="IsVisible" Value="True"/>
+            </Style>
+            <Style Selector="^:pointerover /template/ Border#hoverBg">
+                <Setter Property="Opacity" Value="1"/>
+            </Style>
+            <Style Selector="^[ItemCount=0] /template/ ToggleButton#expander">
+                <Setter Property="Opacity" Value="0"/>
+            </Style>
+        </ControlTheme>
+
+    </Window.Resources>
+
+    <Grid RowDefinitions="Auto,*,Auto">
+        <Border Grid.Row="0" Background="{DynamicResource BgChrome}"
+                BorderBrush="{DynamicResource LineStrong}" BorderThickness="0,0,0,1"
+                Padding="16,10">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <!-- 品牌 -->
+                <TextBlock Text="{}{ }" FontFamily="{DynamicResource MonoFont}"
+                           FontSize="16" FontWeight="Bold"
+                           Foreground="{DynamicResource BrandGlyph}"
+                           VerticalAlignment="Center" Margin="0,0,2,0"/>
+                <TextBlock Text="JsonFormatter" FontSize="12.5" FontWeight="SemiBold"
+                           Foreground="{DynamicResource InkCaption}"
+                           VerticalAlignment="Center" Margin="0,0,8,0"/>
+
+                <Button Theme="{StaticResource PrimaryBtn}" Content="格式化" Click="OnFormatClick"/>
+                <Button Theme="{StaticResource ToolBtn}" Content="压缩" Click="OnMinifyClick"/>
+                <Button Theme="{StaticResource ToolBtn}" Content="压缩原文" Click="OnMinifyRawClick"/>
+                <Button Theme="{StaticResource ToolBtn}" Content="复制" Click="OnCopyClick"/>
+                <Button Theme="{StaticResource ToolBtn}" Content="清空" Click="OnClearClick"/>
+
+                <Border Width="1" Height="18" Background="{DynamicResource LineStrong}"
+                        Margin="6,0,6,0"/>
+
+                <Button Theme="{StaticResource ToolBtn}" Content="展开全部" Click="OnExpandAllClick"/>
+                <Button Theme="{StaticResource ToolBtn}" Content="折叠全部" Click="OnCollapseAllClick"/>
+
+                <Border Width="1" Height="18" Background="{DynamicResource LineStrong}"
+                        Margin="6,0,6,0"/>
+
+                <Button Theme="{StaticResource ToolBtn}" Content="示例" Click="OnSampleClick"/>
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Row="1" ColumnDefinitions="*,6,*,10" Margin="14,12,14,10">
+            <!-- 左：源码 -->
+            <Border Grid.Column="0" Background="{DynamicResource BgSurface}"
+                    BorderBrush="{DynamicResource LineStrong}" BorderThickness="1" CornerRadius="10"
+                    ClipToBounds="True">
+                <Grid RowDefinitions="36,*">
+                    <Border Grid.Row="0" Background="{DynamicResource BgHeader}"
+                            BorderBrush="{DynamicResource LineSoft}" BorderThickness="0,0,0,1">
+                        <Grid Margin="14,0">
+                            <TextBlock Text="源码输入" FontSize="12.5" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource InkCaption}" VerticalAlignment="Center"/>
+                            <TextBlock Text="粘贴后自动解析" FontSize="11" HorizontalAlignment="Right"
+                                       Foreground="{DynamicResource InkHint}" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+                    <Panel Grid.Row="1">
+                        <TextBox x:Name="InputBox" BorderThickness="0" Background="Transparent"
+                                 Padding="12,10" AcceptsReturn="True"
+                                 Foreground="{DynamicResource InkBody}"
+                                 CaretBrush="{DynamicResource AccentBright}"
+                                 SelectionForegroundBrush="White"
+                                 SelectionBrush="{DynamicResource Accent}"
+                                 TextWrapping="NoWrap"
+                                 VerticalContentAlignment="Top"
+                                 HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                                 TextChanged="OnInputTextChanged"/>
+                        <TextBlock x:Name="Placeholder" Text="在此粘贴或输入 JSON 源码…"
+                                   Foreground="{DynamicResource InkHint}" FontSize="13"
+                                   Margin="14,12,0,0" IsHitTestVisible="False"/>
+                    </Panel>
+                </Grid>
+            </Border>
+
+            <GridSplitter Grid.Column="1" Background="Transparent" ResizeDirection="Columns"/>
+
+            <!-- 右：结果 -->
+            <Border Grid.Column="2" Background="{DynamicResource BgSurface}"
+                    BorderBrush="{DynamicResource LineStrong}" BorderThickness="1" CornerRadius="10"
+                    ClipToBounds="True">
+                <Grid RowDefinitions="36,*">
+                    <Border Grid.Row="0" Background="{DynamicResource BgHeader}"
+                            BorderBrush="{DynamicResource LineSoft}" BorderThickness="0,0,0,1">
+                        <Grid Margin="14,0">
+                            <TextBlock Text="格式化结果" FontSize="12.5" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource InkCaption}" VerticalAlignment="Center"/>
+                            <ToggleButton x:Name="HideEmptyToggle" Theme="{StaticResource ChipToggle}"
+                                          Content="隐藏空值" HorizontalAlignment="Right"
+                                          VerticalAlignment="Center"
+                                          Click="OnHideEmptyToggle"/>
+                        </Grid>
+                    </Border>
+                    <Panel Grid.Row="1">
+                        <TreeView x:Name="ResultTree" BorderThickness="0" Background="Transparent"
+                                  Padding="8,8,8,8"
+                                  ItemContainerTheme="{StaticResource JsonNodeTheme}"
+                                  SelectionMode="Single"
+                                  SelectionChanged="OnTreeSelectionChanged">
+                            <TreeView.ItemTemplate>
+                                <TreeDataTemplate ItemsSource="{Binding Children}">
+                                    <StackPanel Orientation="Horizontal" Spacing="7">
+                                        <TextBlock Text="{Binding Key}" FontWeight="{Binding KeyWeight}"
+                                                   Foreground="{Binding KeyBrush}"/>
+                                        <TextBlock Text=":" IsVisible="{Binding ShowSep}"
+                                                   Foreground="{DynamicResource InkHint}"/>
+                                        <Border IsVisible="{Binding BadgeVisible}" CornerRadius="9"
+                                                Background="{DynamicResource AccentSoft}"
+                                                Padding="7,1.5" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding BadgeText}" FontSize="11"
+                                                       FontWeight="SemiBold" Foreground="{Binding SlotBrush}"/>
+                                        </Border>
+                                        <TextBlock Text="{Binding ValueText}" IsVisible="{Binding HasValue}"
+                                                   Foreground="{Binding SlotBrush}"
+                                                   FontWeight="{Binding SlotWeight}" FontStyle="{Binding SlotStyle}"
+                                                   TextTrimming="CharacterEllipsis" MaxWidth="900"
+                                                   ToolTip.Tip="{Binding SlotTooltip}"/>
+                                    </StackPanel>
+                                </TreeDataTemplate>
+                            </TreeView.ItemTemplate>
+                        </TreeView>
+                        <StackPanel x:Name="EmptyHint" HorizontalAlignment="Center"
+                                    VerticalAlignment="Center" IsHitTestVisible="False" Spacing="14">
+                            <TextBlock Text="{}{ }" FontFamily="{DynamicResource MonoFont}"
+                                       FontSize="52" FontWeight="Bold"
+                                       Foreground="{DynamicResource EmptyMark}" HorizontalAlignment="Center"/>
+                            <StackPanel Spacing="7">
+                                <TextBlock Text="粘贴 JSON，右侧即时解析" FontSize="14.5" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource InkCaption}" HorizontalAlignment="Center"/>
+                                <TextBlock Text="数组折叠标数 · 修改标红 · 单击源码定位" FontSize="11.5"
+                                           Foreground="{DynamicResource InkHint}" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Panel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- 状态栏 -->
+        <Border Grid.Row="2" Background="{DynamicResource BgChrome}"
+                BorderBrush="{DynamicResource LineStrong}" BorderThickness="0,1,0,0" Padding="14,0">
+            <Grid Height="34">
+                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <Ellipse x:Name="StatusDot" Width="7" Height="7" Fill="{DynamicResource InkHint}"/>
+                    <TextBlock x:Name="StatusText" Foreground="{DynamicResource InkStatus}"
+                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right"
+                            VerticalAlignment="Center">
+                    <TextBlock x:Name="SizeText" Foreground="{DynamicResource InkStatus}" FontSize="11.5"
+                               VerticalAlignment="Center"/>
+                    <Button x:Name="GearButton" Theme="{StaticResource ToolBtn}" Click="OnGearClick"
+                            Width="34" Height="26" Padding="0" ToolTip.Tip="设置">
+                        <Panel Width="14" Height="14">
+                            <Path Fill="{DynamicResource InkCaption}"
+                                  Data="M 7,4.2 A 2.8,2.8 0 1 0 9.8,7 L 12.6,7 L 12.6,8.4 L 9.8,8.4 A 2.8,2.8 0 0 1 9.31,9.81 L 10.29,11.5 L 9.08,12.2 L 8.1,10.51 A 2.8,2.8 0 0 1 5.9,10.51 L 4.92,12.2 L 3.71,11.5 L 4.69,9.81 A 2.8,2.8 0 0 1 4.2,8.4 L 1.4,8.4 L 1.4,7 L 4.2,7 A 2.8,2.8 0 0 1 4.69,5.59 L 3.71,3.9 L 4.92,3.2 L 5.9,4.89 A 2.8,2.8 0 0 1 7,4.2 Z"/>
+                        </Panel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

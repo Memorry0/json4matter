@@ -1,0 +1,27 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- 清新绿 -->
+    <SolidColorBrush x:Key="BgCanvas"      Color="#EFF5F1"/>
+    <SolidColorBrush x:Key="BgSurface"     Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="BgChrome"      Color="#F9FCFA"/>
+    <SolidColorBrush x:Key="BgHeader"      Color="#F4F8F5"/>
+    <SolidColorBrush x:Key="LineStrong"    Color="#DFE9E3"/>
+    <SolidColorBrush x:Key="LineSoft"      Color="#EBF1ED"/>
+    <SolidColorBrush x:Key="InkBody"       Color="#24312A"/>
+    <SolidColorBrush x:Key="InkCaption"    Color="#43544B"/>
+    <SolidColorBrush x:Key="InkHint"       Color="#66796E"/>
+    <SolidColorBrush x:Key="InkStatus"     Color="#5F7167"/>
+    <SolidColorBrush x:Key="Accent"        Color="#0B815A"/>
+    <SolidColorBrush x:Key="AccentBright"  Color="#10B981"/>
+    <SolidColorBrush x:Key="AccentSoft"    Color="#E3F3EC"/>
+    <SolidColorBrush x:Key="BtnBg"         Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="BtnBorder"     Color="#D7E2DB"/>
+    <SolidColorBrush x:Key="BtnFg"         Color="#33403A"/>
+    <SolidColorBrush x:Key="BtnHover"      Color="#F0F7F3"/>
+    <SolidColorBrush x:Key="BtnPressed"    Color="#E2EFE7"/>
+    <SolidColorBrush x:Key="HoverRow"      Color="#F2F8F4"/>
+    <SolidColorBrush x:Key="StatusOk"      Color="#0B7A5C"/>
+    <SolidColorBrush x:Key="StatusErr"     Color="#C13A2F"/>
+    <SolidColorBrush x:Key="BrandGlyph"    Color="#10B981"/>
+    <SolidColorBrush x:Key="EmptyMark"     Color="#C4E3D4"/>
+</ResourceDictionary>
