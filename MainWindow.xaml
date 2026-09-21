@@ -363,7 +363,7 @@
                             <TextBlock Text="格式化结果" FontSize="12.5" FontWeight="SemiBold"
                                        Foreground="{DynamicResource InkCaption}" VerticalAlignment="Center"/>
                             <ToggleButton x:Name="HideEmptyToggle" Style="{StaticResource ChipToggle}"
-                                          Content="隐藏空值" HorizontalAlignment="Right"
+                                          Content="隐藏null值" HorizontalAlignment="Right"
                                           VerticalAlignment="Center" Click="OnHideEmptyToggle"/>
                         </Grid>
                     </Border>
