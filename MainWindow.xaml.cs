@@ -426,7 +426,7 @@ public partial class MainWindow : Window
         node.ApplyDefaultExpand(count > 6000 ? 1 : count > 1500 ? 3 : 12);
         _root = node;
         ResultTree.ItemsSource = new[] { node };
-        SetStatus(StatusOk, _hideEmpty ? "已隐藏 null 值字段" : "已显示全部字段");
+        SetStatus(StatusOk, _hideEmpty ? "已隐藏 null 值和空数组" : "已显示全部字段");
     }
 
     // ---------- 设置 ----------
