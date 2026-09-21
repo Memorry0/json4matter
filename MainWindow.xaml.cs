@@ -61,6 +61,7 @@ public partial class MainWindow : Window
         """;
 
     private readonly DispatcherTimer _debounce;
+    private readonly DispatcherTimer _toastTimer;
     private int _seq;
     private JsonDocument? _doc;
     private string? _pretty;
@@ -96,6 +97,8 @@ public partial class MainWindow : Window
 
         _debounce = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(280) };
         _debounce.Tick += (_, _) => { _debounce.Stop(); RunParse(); };
+        _toastTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
+        _toastTimer.Tick += (_, _) => { _toastTimer.Stop(); Toast.Visibility = Visibility.Collapsed; };
         Closed += (_, _) => _doc?.Dispose();
         ResultTree.ContextMenu = BuildTreeMenu();
 
@@ -145,6 +148,7 @@ public partial class MainWindow : Window
         var baseline = _freshContent ? null : _originBaseline;
         bool fresh = _freshContent;
         bool hide = _hideEmpty;
+        var snapshot = fresh ? null : CollectExpanded(_root); // 保留用户展开状态
         _freshContent = false;
         try
         {
@@ -155,7 +159,7 @@ public partial class MainWindow : Window
                 MaxDepth = 1024,
             };
 
-            (JsonDocument doc, JsonNodeVM root, string pretty, int nodeCount, long ms) =
+            (JsonDocument doc, JsonNodeVM root, string pretty, int nodeCount, long ms, List<JsonNodeVM>? chain) =
                 await Task.Run(() =>
                 {
                     var sw = Stopwatch.StartNew();
@@ -163,9 +167,14 @@ public partial class MainWindow : Window
                     int count = 0;
                     var node = JsonNodeVM.Root(d.RootElement, hide, ref count);
                     node.MarkDiff(baseline);
+                    if (fresh)
+                        node.ApplyDefaultExpand(count > 6000 ? 1 : count > 1500 ? 3 : 12);
+                    else
+                        RestoreExpanded(node, "", snapshot!); // 同一文档被修改：保持展开不折叠
+                    var chain = fresh ? null : FindFirstModifiedChain(node);
                     sw.Stop();
                     string p = JsonSerializer.Serialize(d.RootElement, IndentOptions);
-                    return (d, node, p, count, sw.ElapsedMilliseconds);
+                    return (d, node, p, count, sw.ElapsedMilliseconds, chain);
                 });
 
             if (seq != _seq)
@@ -181,9 +190,20 @@ public partial class MainWindow : Window
             _parsedText = text;
             if (fresh)
                 _originBaseline = JsonNodeVM.BuildBaseline(root); // 固化原始基线
-            root.ApplyDefaultExpand(nodeCount > 6000 ? 1 : nodeCount > 1500 ? 3 : 12);
 
-            ResultTree.ItemsSource = new[] { root };
+            if (chain is not null)
+            {
+                // 定位到本次修改处：展开祖先并滚到可视区
+                for (int i = 0; i < chain.Count - 1; i++)
+                    chain[i].IsExpanded = true;
+                ResultTree.ItemsSource = new[] { root };
+                ResultTree.UpdateLayout();
+                FindContainer(chain)?.BringIntoView();
+            }
+            else
+            {
+                ResultTree.ItemsSource = new[] { root };
+            }
             EmptyHint.Visibility = Visibility.Collapsed;
             SetStatus(StatusOk, $"✔ 解析成功 · {nodeCount:N0} 个节点 · {ms} ms");
             ShowSize(text);
@@ -264,7 +284,19 @@ public partial class MainWindow : Window
         string text = _pretty ?? InputBox.Text;
         if (text.Length == 0) return;
         if (CopyToClipboard(text))
+        {
             SetStatus(StatusOk, "已复制到剪贴板");
+            ShowToast("\u2714 复制成功");
+        }
+    }
+
+    /// <summary>顶部居中轻提示，0.5 秒后自动消失（连续触发会重置计时）。</summary>
+    private void ShowToast(string message)
+    {
+        ToastText.Text = message;
+        Toast.Visibility = Visibility.Visible;
+        _toastTimer.Stop();
+        _toastTimer.Start();
     }
 
     private void OnClearClick(object sender, RoutedEventArgs e)
@@ -348,8 +380,23 @@ public partial class MainWindow : Window
             chain[i].IsExpanded = true; // 逐级展开祖先
         if (node.HasChildren) node.IsExpanded = true;
 
-        // 嵌套节点的容器挂在各父节点的生成器上，需沿链逐级下钻；
-        // 虚拟化下每级容器可能要经几次布局才实现
+        var tvi = FindContainer(chain);
+
+        if (tvi is not null)
+        {
+            tvi.IsSelected = true;   // 触发 SelectedItemChanged → 子树高亮
+            tvi.BringIntoView();
+            SetStatus(StatusOk, "已定位：" + Describe(segs));
+        }
+        else
+        {
+            SetStatus(StatusOk, "已展开到：" + Describe(segs));
+        }
+    }
+
+    /// <summary>沿链逐级下钻取节点容器：嵌套容器挂在各父节点生成器上，虚拟化下需多次布局。</summary>
+    private TreeViewItem? FindContainer(List<JsonNodeVM> chain)
+    {
         TreeViewItem? tvi = ResultTree.ItemContainerGenerator.ContainerFromItem(chain[0]) as TreeViewItem;
         for (int i = 1; tvi is not null && i < chain.Count; i++)
         {
@@ -361,16 +408,46 @@ public partial class MainWindow : Window
             }
             tvi = child;
         }
+        return tvi;
+    }
 
-        if (tvi is not null)
+    /// <summary>收集当前树的展开路径快照（重新解析后恢复，避免折叠跳动）。</summary>
+    private static HashSet<string> CollectExpanded(JsonNodeVM? root)
+    {
+        var set = new HashSet<string>();
+        if (root is not null)
+            Collect(root, "", set);
+        return set;
+
+        static void Collect(JsonNodeVM n, string path, HashSet<string> s)
         {
-            tvi.IsSelected = true;   // 触发 SelectedItemChanged → 子树高亮
-            tvi.BringIntoView();
-            SetStatus(StatusOk, "已定位：" + Describe(segs));
+            if (n.IsExpanded) s.Add(path);
+            foreach (var c in n.Children)
+                Collect(c, path.Length == 0 ? c.Key : path + '\u0001' + c.Key, s);
         }
-        else
+    }
+
+    private static void RestoreExpanded(JsonNodeVM n, string path, HashSet<string> s)
+    {
+        n.IsExpanded = n.IsRoot || s.Contains(path);
+        foreach (var c in n.Children)
+            RestoreExpanded(c, path.Length == 0 ? c.Key : path + '\u0001' + c.Key, s);
+    }
+
+    /// <summary>DFS 找首个被修改节点的根→节点链（用于自动定位）。</summary>
+    private static List<JsonNodeVM>? FindFirstModifiedChain(JsonNodeVM root)
+    {
+        var chain = new List<JsonNodeVM>();
+        return Dfs(root) ? chain : null;
+
+        bool Dfs(JsonNodeVM n)
         {
-            SetStatus(StatusOk, "已展开到：" + Describe(segs));
+            chain.Add(n);
+            if (!n.IsRoot && (n.IsKeyModified || n.IsValueModified)) return true;
+            foreach (var c in n.Children)
+                if (Dfs(c)) return true;
+            chain.RemoveAt(chain.Count - 1);
+            return false;
         }
     }
 
@@ -426,10 +503,19 @@ public partial class MainWindow : Window
         if (_doc is null) return;
         int count = 0;
         var node = JsonNodeVM.Root(_doc.RootElement, _hideEmpty, ref count);
+        var snapshot = CollectExpanded(_root);
         node.MarkDiff(_originBaseline); // 与原始基线比，改回原值不标红
-        node.ApplyDefaultExpand(count > 6000 ? 1 : count > 1500 ? 3 : 12);
+        RestoreExpanded(node, "", snapshot);
+        var chain = FindFirstModifiedChain(node);
         _root = node;
         ResultTree.ItemsSource = new[] { node };
+        if (chain is not null)
+        {
+            for (int i = 0; i < chain.Count - 1; i++)
+                chain[i].IsExpanded = true;
+            ResultTree.UpdateLayout();
+            FindContainer(chain)?.BringIntoView();
+        }
         SetStatus(StatusOk, _hideEmpty ? "已隐藏 null 值和空数组" : "已显示全部字段");
     }
 

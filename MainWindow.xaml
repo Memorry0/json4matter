@@ -395,6 +395,14 @@
             </Border>
         </Grid>
 
+        <!-- 轻提示 Toast：0.5s 自动消失 -->
+        <Border x:Name="Toast" Grid.Row="1" Visibility="Collapsed" IsHitTestVisible="False"
+                HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,66,0,0"
+                Background="#E61F2A24" CornerRadius="18" Padding="18,9"
+                Panel.ZIndex="100">
+            <TextBlock x:Name="ToastText" Text="&#x2714; 复制成功" Foreground="White" FontSize="12.5"/>
+        </Border>
+
         <!-- 状态栏 -->
         <Border Grid.Row="2" Background="{DynamicResource BgChrome}"
                 BorderBrush="{DynamicResource LineStrong}" BorderThickness="0,1,0,0">
