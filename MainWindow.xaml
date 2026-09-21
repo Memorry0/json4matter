@@ -409,10 +409,11 @@
                     <TextBlock x:Name="SizeText" Foreground="{DynamicResource InkStatus}" FontSize="11.5"
                                VerticalAlignment="Center" Margin="0,0,14,0"/>
                     <Button x:Name="GearButton" Style="{StaticResource ToolButton}" Click="OnGearClick"
-                            Width="34" Height="26" Padding="0" ToolTip="设置"
+                            Width="36" Height="26" Padding="0" ToolTip="设置"
                             AutomationProperties.Name="设置">
-                        <Path Fill="{DynamicResource InkCaption}" Width="14" Height="14" Stretch="Uniform"
-                              Data="M 7,4.2 A 2.8,2.8 0 1 0 9.8,7 L 12.6,7 L 12.6,8.4 L 9.8,8.4 A 2.8,2.8 0 0 1 9.31,9.81 L 10.29,11.5 L 9.08,12.2 L 8.1,10.51 A 2.8,2.8 0 0 1 5.9,10.51 L 4.92,12.2 L 3.71,11.5 L 4.69,9.81 A 2.8,2.8 0 0 1 4.2,8.4 L 1.4,8.4 L 1.4,7 L 4.2,7 A 2.8,2.8 0 0 1 4.69,5.59 L 3.71,3.9 L 4.92,3.2 L 5.9,4.89 A 2.8,2.8 0 0 1 7,4.2 Z"/>
+                        <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                   Foreground="{DynamicResource InkCaption}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Button>
                 </StackPanel>
             </Grid>
