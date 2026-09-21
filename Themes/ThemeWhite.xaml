@@ -1,6 +1,6 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <!-- 干净白 -->
+    <!-- 清爽白 -->
     <SolidColorBrush x:Key="BgCanvas"      Color="#F6F8FA"/>
     <SolidColorBrush x:Key="BgSurface"     Color="#FFFFFF"/>
     <SolidColorBrush x:Key="BgChrome"      Color="#FAFBFC"/>

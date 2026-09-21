@@ -95,14 +95,14 @@
                                Foreground="{DynamicResource InkCaption}"/>
                 </StackPanel>
             </Button>
-            <Button x:Name="CardWhite" Style="{StaticResource ThemeCard}" Tag="White" Click="OnThemeCardClick" AutomationProperties.Name="主题-干净白">
+            <Button x:Name="CardWhite" Style="{StaticResource ThemeCard}" Tag="White" Click="OnThemeCardClick" AutomationProperties.Name="主题-清爽白">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,8">
                         <Ellipse Width="16" Height="16" Fill="#2456C4"/>
                         <Ellipse Width="16" Height="16" Fill="#F6F8FA" Stroke="#E2E6EB" StrokeThickness="1" Margin="5,0,0,0"/>
                         <Ellipse Width="16" Height="16" Fill="#FFFFFF" Stroke="#E2E6EB" StrokeThickness="1" Margin="5,0,0,0"/>
                     </StackPanel>
-                    <TextBlock Text="干净白" FontSize="12" HorizontalAlignment="Center"
+                    <TextBlock Text="清爽白" FontSize="12" HorizontalAlignment="Center"
                                Foreground="{DynamicResource InkCaption}"/>
                 </StackPanel>
             </Button>
