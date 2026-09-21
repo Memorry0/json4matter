@@ -68,7 +68,8 @@ public partial class MainWindow : Window
     private string? _parsedText;
     /// <summary>示例/清空后的首次解析：重置修改对比基线，不标红。</summary>
     private bool _freshContent;
-    private JsonNodeVM.BaselineInfo? _prevBaseline;
+    /// <summary>首次格式化（或点示例/清空后）固化的原始基线：后续修改都与它比，改回原值即恢复原色。</summary>
+    private JsonNodeVM.BaselineInfo? _originBaseline;
     private bool _hideEmpty;
 
     private static Brush StatusOk => (Brush)Application.Current.TryFindResource("StatusOk");
@@ -132,6 +133,7 @@ public partial class MainWindow : Window
             _doc = null;
             _pretty = null;
             _root = null;
+            _originBaseline = null;
             ResultTree.ItemsSource = null;
             EmptyHint.Visibility = Visibility.Visible;
             SizeText.Text = "";
@@ -140,7 +142,8 @@ public partial class MainWindow : Window
         }
 
         SetStatus(StatusNeutral, "解析中…");
-        var baseline = _freshContent ? null : JsonNodeVM.BuildBaseline(_root);
+        var baseline = _freshContent ? null : _originBaseline;
+        bool fresh = _freshContent;
         bool hide = _hideEmpty;
         _freshContent = false;
         try
@@ -176,7 +179,8 @@ public partial class MainWindow : Window
             _pretty = pretty;
             _root = root;
             _parsedText = text;
-            _prevBaseline = baseline; // 隐藏空值重建时复用同一基线
+            if (fresh)
+                _originBaseline = JsonNodeVM.BuildBaseline(root); // 固化原始基线
             root.ApplyDefaultExpand(nodeCount > 6000 ? 1 : nodeCount > 1500 ? 3 : 12);
 
             ResultTree.ItemsSource = new[] { root };
@@ -422,7 +426,7 @@ public partial class MainWindow : Window
         if (_doc is null) return;
         int count = 0;
         var node = JsonNodeVM.Root(_doc.RootElement, _hideEmpty, ref count);
-        node.MarkDiff(_prevBaseline); // 内容未变，复用同一基线重现标红
+        node.MarkDiff(_originBaseline); // 与原始基线比，改回原值不标红
         node.ApplyDefaultExpand(count > 6000 ? 1 : count > 1500 ? 3 : 12);
         _root = node;
         ResultTree.ItemsSource = new[] { node };
