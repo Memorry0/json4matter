@@ -1,61 +1,50 @@
-using Avalonia.Markup.Xaml;
-using Avalonia.Media;
-using Avalonia.Media.Immutable;
+using System.Windows;
+using System.Windows.Media;
 
 namespace JsonFormatter;
 
-/// <summary>当前主题的树节点配色（值按类型着色、key 近黑、修改红、选中底色）。</summary>
+/// <summary>当前主题的树节点配色（key 近黑、值按类型分色、修改红、选中底色）。</summary>
 public sealed record ThemePalette(
-    IBrush Key, IBrush IndexKey, IBrush RootKey,
-    IBrush String, IBrush Number, IBrush Bool, IBrush Null,
-    IBrush Count, IBrush Modified,
-    IBrush SubtreeBg, IBrush SelBg)
+    Brush Key, Brush IndexKey, Brush RootKey,
+    Brush String, Brush Number, Brush Bool, Brush Null, Brush Empty,
+    Brush Count, Brush Modified,
+    Brush SubtreeBg, Brush SelBg)
 {
     public static readonly ThemePalette Green = new(
-        Brush("#1E2A23"), Brush("#566E7C"), Brush("#1E2A23"),
-        Brush("#0B7A5C"), Brush("#2456B8"), Brush("#B26205"), Brush("#6E7B76"),
-        Brush("#0B7A5C"), Brush("#C13A2F"),
-        Brush("#E9F5EF"), Brush("#C8E9D8"));
+        B("#1E2A23"), B("#566E7C"), B("#1E2A23"),
+        B("#0B7A5C"), B("#2456B8"), B("#B26205"), B("#6E7B76"), B("#6E7B76"),
+        B("#0B7A5C"), B("#C13A2F"),
+        B("#E9F5EF"), B("#C8E9D8"));
 
     public static readonly ThemePalette Paper = new(
-        Brush("#33291A"), Brush("#77664A"), Brush("#33291A"),
-        Brush("#7A4B12"), Brush("#274F8F"), Brush("#8F4A08"), Brush("#7A7261"),
-        Brush("#7A4B12"), Brush("#B3261E"),
-        Brush("#F5EDD9"), Brush("#EBDDB6"));
+        B("#33291A"), B("#77664A"), B("#33291A"),
+        B("#7A4B12"), B("#274F8F"), B("#8F4A08"), B("#7A7261"), B("#7A7261"),
+        B("#7A4B12"), B("#B3261E"),
+        B("#F5EDD9"), B("#EBDDB6"));
 
     public static readonly ThemePalette White = new(
-        Brush("#16181D"), Brush("#5A6472"), Brush("#16181D"),
-        Brush("#0F766E"), Brush("#1D4ED8"), Brush("#B45309"), Brush("#6B7280"),
-        Brush("#0F766E"), Brush("#B91C1C"),
-        Brush("#ECF2FD"), Brush("#D7E4FB"));
+        B("#16181D"), B("#5A6472"), B("#16181D"),
+        B("#0F766E"), B("#1D4ED8"), B("#B45309"), B("#6B7280"), B("#6B7280"),
+        B("#0F766E"), B("#B91C1C"),
+        B("#ECF2FD"), B("#D7E4FB"));
 
-    private static IBrush Brush(string hex) => new ImmutableSolidColorBrush(Color.Parse(hex));}
+    private static Brush B(string hex)
+    {
+        var b = new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));
+        b.Freeze();
+        return b;
+    }
+}
 
 /// <summary>主题切换：换 chrome 资源字典 + 换 VM 配色。</summary>
 public static class ThemeManager
 {
     public static ThemePalette Current { get; private set; } = ThemePalette.Green;
-
     public static string CurrentId { get; private set; } = "Green";
 
-    /// <summary>界面（非等宽）字体：mac 用苹方，win 用雅黑。</summary>
-    public static string UiFontFamily =>
-        OperatingSystem.IsMacOS() ? "PingFang SC"
-        : OperatingSystem.IsWindows() ? "Microsoft YaHei UI"
-        : "Inter";
-
-    /// <summary>代码等宽字体。</summary>
-    public static string MonoFontFamily =>
-        OperatingSystem.IsMacOS() ? "Menlo" : "Consolas";
-
-    public static void Apply(string id, bool applyResources)
+    public static void Apply(string id)
     {
-        CurrentId = id switch
-        {
-            "Paper" => "Paper",
-            "White" => "White",
-            _ => "Green",
-        };
+        CurrentId = id switch { "Paper" => "Paper", "White" => "White", _ => "Green" };
         Current = CurrentId switch
         {
             "Paper" => ThemePalette.Paper,
@@ -63,15 +52,12 @@ public static class ThemeManager
             _ => ThemePalette.Green,
         };
 
-        if (applyResources)
-        {
-            var dict = (Avalonia.Controls.ResourceDictionary)AvaloniaXamlLoader.Load(
-                new Uri($"avares://JsonFormatter/Themes/Theme{CurrentId}.axaml"));
-            var merged = ((Avalonia.Controls.ResourceDictionary)App.Current.Resources).MergedDictionaries;
-            if (merged.Count > 0)
-                merged[merged.Count - 1] = dict;
-            else
-                merged.Add(dict);
-        }
+        var uri = new Uri($"Themes/Theme{CurrentId}.xaml", UriKind.Relative);
+        var dict = (ResourceDictionary)Application.LoadComponent(uri);
+        var merged = Application.Current.Resources.MergedDictionaries;
+        if (merged.Count > 0)
+            merged[0] = dict;
+        else
+            merged.Add(dict);
     }
 }

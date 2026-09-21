@@ -2,20 +2,17 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>JsonFormatter</AssemblyName>
     <RootNamespace>JsonFormatter</RootNamespace>
+    <ApplicationIcon>app.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <Version>1.0.0</Version>
-    <Product>JsonFormatter</Product>
-    <Description>Cross-platform JSON formatter &amp; viewer (Windows / macOS)</Description>
+    <Product>JSON 格式化工具</Product>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Avalonia" Version="11.2.3" />
-    <PackageReference Include="Avalonia.Desktop" Version="11.2.3" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.3" />
-  </ItemGroup>
 
 </Project>

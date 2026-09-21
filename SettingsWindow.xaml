@@ -1,0 +1,155 @@
+<Window x:Class="JsonFormatter.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="设置" Width="430" SizeToContent="Height"
+        ResizeMode="NoResize" WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        Background="{DynamicResource BgCanvas}"
+        FontFamily="Microsoft YaHei UI" FontSize="13"
+        UseLayoutRounding="True" TextOptions.TextFormattingMode="Display">
+
+    <Window.Resources>
+        <!-- 主题卡片（Button：可被 UIA Invoke，无障碍友好） -->
+        <Style x:Key="ThemeCard" TargetType="Button">
+            <Setter Property="Background" Value="{DynamicResource BgSurface}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource LineStrong}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" CornerRadius="10" BorderThickness="1.5"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                Padding="10,12">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource AccentBright}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- iOS 风格开关 -->
+        <Style x:Key="SwitchToggle" TargetType="ToggleButton">
+            <Setter Property="Width" Value="44"/>
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Grid>
+                            <Border x:Name="track" CornerRadius="12" Background="#D5DBD7"
+                                    BorderThickness="1" BorderBrush="#C2C9C4"/>
+                            <Ellipse x:Name="thumb" Width="18" Height="18" Fill="White"
+                                     HorizontalAlignment="Left" Margin="2,0,0,0">
+                                <Ellipse.Effect>
+                                    <DropShadowEffect BlurRadius="4" ShadowDepth="1" Opacity="0.25"/>
+                                </Ellipse.Effect>
+                            </Ellipse>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="track" Property="Background" Value="{DynamicResource Accent}"/>
+                                <Setter TargetName="track" Property="BorderBrush" Value="{DynamicResource Accent}"/>
+                                <Setter TargetName="thumb" Property="HorizontalAlignment" Value="Right"/>
+                                <Setter TargetName="thumb" Property="Margin" Value="0,0,2,0"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <StackPanel Margin="22,18" Grid.IsSharedSizeScope="True">
+
+        <!-- 主题 -->
+        <TextBlock Text="界面主题" FontSize="12.5" FontWeight="SemiBold"
+                   Foreground="{DynamicResource InkCaption}" Margin="0,0,0,10"/>
+        <UniformGrid Columns="3">
+            <Button x:Name="CardGreen" Style="{StaticResource ThemeCard}" Tag="Green" Click="OnThemeCardClick" AutomationProperties.Name="主题-清新绿">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,8">
+                        <Ellipse Width="16" Height="16" Fill="#10B981"/>
+                        <Ellipse Width="16" Height="16" Fill="#EFF5F1" Stroke="#DFE9E3" StrokeThickness="1" Margin="5,0,0,0"/>
+                        <Ellipse Width="16" Height="16" Fill="#FFFFFF" Stroke="#DFE9E3" StrokeThickness="1" Margin="5,0,0,0"/>
+                    </StackPanel>
+                    <TextBlock Text="清新绿" FontSize="12" HorizontalAlignment="Center"
+                               Foreground="{DynamicResource InkCaption}"/>
+                </StackPanel>
+            </Button>
+            <Button x:Name="CardPaper" Style="{StaticResource ThemeCard}" Tag="Paper" Margin="10,0" Click="OnThemeCardClick" AutomationProperties.Name="主题-纸质黄">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,8">
+                        <Ellipse Width="16" Height="16" Fill="#B98A1C"/>
+                        <Ellipse Width="16" Height="16" Fill="#F5EFDF" Stroke="#E4D8BE" StrokeThickness="1" Margin="5,0,0,0"/>
+                        <Ellipse Width="16" Height="16" Fill="#FFFDF6" Stroke="#E4D8BE" StrokeThickness="1" Margin="5,0,0,0"/>
+                    </StackPanel>
+                    <TextBlock Text="纸质黄" FontSize="12" HorizontalAlignment="Center"
+                               Foreground="{DynamicResource InkCaption}"/>
+                </StackPanel>
+            </Button>
+            <Button x:Name="CardWhite" Style="{StaticResource ThemeCard}" Tag="White" Click="OnThemeCardClick" AutomationProperties.Name="主题-干净白">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,8">
+                        <Ellipse Width="16" Height="16" Fill="#2456C4"/>
+                        <Ellipse Width="16" Height="16" Fill="#F6F8FA" Stroke="#E2E6EB" StrokeThickness="1" Margin="5,0,0,0"/>
+                        <Ellipse Width="16" Height="16" Fill="#FFFFFF" Stroke="#E2E6EB" StrokeThickness="1" Margin="5,0,0,0"/>
+                    </StackPanel>
+                    <TextBlock Text="干净白" FontSize="12" HorizontalAlignment="Center"
+                               Foreground="{DynamicResource InkCaption}"/>
+                </StackPanel>
+            </Button>
+        </UniformGrid>
+
+        <Rectangle Height="1" Fill="{DynamicResource LineSoft}" Margin="0,16"/>
+
+        <!-- 字号 -->
+        <Grid Margin="0,16,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="字体大小" FontSize="12.5" FontWeight="SemiBold"
+                       Foreground="{DynamicResource InkCaption}" VerticalAlignment="Center"/>
+            <TextBlock x:Name="FontSizeLabel" Grid.Column="1" FontSize="13" FontWeight="Bold"
+                       Foreground="{DynamicResource Accent}" VerticalAlignment="Center"/>
+        </Grid>
+        <Grid Margin="0,10,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Slider x:Name="FontSizeSlider" Minimum="11" Maximum="20" IsSnapToTickEnabled="True"
+                    TickFrequency="1" VerticalAlignment="Center"
+                    ValueChanged="OnFontSizeChanged"/>
+            <TextBlock Grid.Column="1" Text="11 — 20" FontSize="10.5" Margin="10,0,0,0"
+                       Foreground="{DynamicResource InkHint}" VerticalAlignment="Center"/>
+        </Grid>
+
+        <Rectangle Height="1" Fill="{DynamicResource LineSoft}" Margin="0,16"/>
+
+        <!-- 全屏 -->
+        <Grid Margin="0,16,0,2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Text="默认全屏启动" FontSize="12.5" FontWeight="SemiBold"
+                           Foreground="{DynamicResource InkCaption}"/>
+                <TextBlock Text="下次启动窗口时最大化" FontSize="11" Margin="0,3,0,0"
+                           Foreground="{DynamicResource InkHint}"/>
+            </StackPanel>
+            <ToggleButton x:Name="FullscreenSwitch" Grid.Column="1" Style="{StaticResource SwitchToggle}"
+                          VerticalAlignment="Center" Checked="OnFullscreenChanged" Unchecked="OnFullscreenChanged"/>
+        </Grid>
+
+    </StackPanel>
+</Window>

@@ -1,4 +1,4 @@
-<ResourceDictionary xmlns="https://github.com/avaloniaui"
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <!-- 清新绿 -->
     <SolidColorBrush x:Key="BgCanvas"      Color="#EFF5F1"/>
@@ -20,6 +20,8 @@
     <SolidColorBrush x:Key="BtnHover"      Color="#F0F7F3"/>
     <SolidColorBrush x:Key="BtnPressed"    Color="#E2EFE7"/>
     <SolidColorBrush x:Key="HoverRow"      Color="#F2F8F4"/>
+    <SolidColorBrush x:Key="SelRow"        Color="#C8E9D8"/>
+    <SolidColorBrush x:Key="SelSub"        Color="#E9F5EF"/>
     <SolidColorBrush x:Key="StatusOk"      Color="#0B7A5C"/>
     <SolidColorBrush x:Key="StatusErr"     Color="#C13A2F"/>
     <SolidColorBrush x:Key="BrandGlyph"    Color="#10B981"/>
