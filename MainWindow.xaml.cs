@@ -170,7 +170,10 @@ public partial class MainWindow : Window
                     if (fresh)
                         node.ApplyDefaultExpand(count > 6000 ? 1 : count > 1500 ? 3 : 12);
                     else
-                        RestoreExpanded(node, "", snapshot!); // 同一文档被修改：保持展开不折叠
+                    {
+                        int restoreIndex = 0;
+                        RestoreExpanded(node, ref restoreIndex, snapshot!); // 同一文档被修改：保持展开不折叠
+                    }
                     var chain = fresh ? null : FindFirstModifiedChain(node);
                     sw.Stop();
                     string p = JsonSerializer.Serialize(d.RootElement, IndentOptions);
@@ -194,7 +197,7 @@ public partial class MainWindow : Window
             if (chain is not null)
             {
                 // 定位到本次修改处：展开祖先并滚到可视区
-                for (int i = 0; i < chain.Count - 1; i++)
+                for (int i = 0; i < chain.Count; i++)
                     chain[i].IsExpanded = true;
                 ResultTree.ItemsSource = new[] { root };
                 ResultTree.UpdateLayout();
@@ -411,27 +414,35 @@ public partial class MainWindow : Window
         return tvi;
     }
 
-    /// <summary>收集当前树的展开路径快照（重新解析后恢复，避免折叠跳动）。</summary>
-    private static HashSet<string> CollectExpanded(JsonNodeVM? root)
+    /// <summary>
+    /// 收集当前树的展开状态快照（前序序号）。按位置而非路径记录：
+    /// 改 key 会改变子树路径，但不改变前序位置，展开状态因此得以保留。
+    /// </summary>
+    private static HashSet<int> CollectExpanded(JsonNodeVM? root)
     {
-        var set = new HashSet<string>();
+        var set = new HashSet<int>();
         if (root is not null)
-            Collect(root, "", set);
+        {
+            int index = 0;
+            Collect(root, ref index, set);
+        }
         return set;
 
-        static void Collect(JsonNodeVM n, string path, HashSet<string> s)
+        static void Collect(JsonNodeVM n, ref int index, HashSet<int> s)
         {
-            if (n.IsExpanded) s.Add(path);
+            int self = index++;
+            if (n.IsExpanded) s.Add(self);
             foreach (var c in n.Children)
-                Collect(c, path.Length == 0 ? c.Key : path + '\u0001' + c.Key, s);
+                Collect(c, ref index, s);
         }
     }
 
-    private static void RestoreExpanded(JsonNodeVM n, string path, HashSet<string> s)
+    private static void RestoreExpanded(JsonNodeVM n, ref int index, HashSet<int> s)
     {
-        n.IsExpanded = n.IsRoot || s.Contains(path);
+        int self = index++;
+        n.IsExpanded = n.IsRoot || s.Contains(self);
         foreach (var c in n.Children)
-            RestoreExpanded(c, path.Length == 0 ? c.Key : path + '\u0001' + c.Key, s);
+            RestoreExpanded(c, ref index, s);
     }
 
     /// <summary>DFS 找首个被修改节点的根→节点链（用于自动定位）。</summary>
@@ -505,13 +516,13 @@ public partial class MainWindow : Window
         var node = JsonNodeVM.Root(_doc.RootElement, _hideEmpty, ref count);
         var snapshot = CollectExpanded(_root);
         node.MarkDiff(_originBaseline); // 与原始基线比，改回原值不标红
-        RestoreExpanded(node, "", snapshot);
+        { int ri = 0; RestoreExpanded(node, ref ri, snapshot); }
         var chain = FindFirstModifiedChain(node);
         _root = node;
         ResultTree.ItemsSource = new[] { node };
         if (chain is not null)
         {
-            for (int i = 0; i < chain.Count - 1; i++)
+            for (int i = 0; i < chain.Count; i++)
                 chain[i].IsExpanded = true;
             ResultTree.UpdateLayout();
             FindContainer(chain)?.BringIntoView();
