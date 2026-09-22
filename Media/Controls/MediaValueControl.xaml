@@ -12,6 +12,16 @@
                    TextTrimming="CharacterEllipsis" MaxWidth="720"
                    MouseEnter="OnMouseEnter" MouseLeave="OnMouseLeave"
                    PreviewMouseLeftButtonDown="OnClicked">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding SearchHitValue}" Value="True">
+                            <Setter Property="Background" Value="#F7D66A"/>
+                            <Setter Property="Padding" Value="3,0.5"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
             <TextBlock.TextDecorations>
                 <TextDecoration Location="Underline" PenOffset="2">
                     <TextDecoration.Pen>

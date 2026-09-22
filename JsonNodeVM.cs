@@ -12,6 +12,8 @@ public sealed class JsonNodeVM : INotifyPropertyChanged
     private bool _isExpanded;
     private bool _isSelectedNode;
     private bool _isSubtreeHighlighted;
+    private bool _searchHitKey;
+    private bool _searchHitValue;
 
     public string Key { get; }
     public List<JsonNodeVM> Children { get; } = new();
@@ -79,6 +81,20 @@ public sealed class JsonNodeVM : INotifyPropertyChanged
     {
         get => _isSubtreeHighlighted;
         set { if (_isSubtreeHighlighted != value) { _isSubtreeHighlighted = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsSubtreeHighlighted))); } }
+    }
+
+    /// <summary>搜索命中：key 匹配（黄色高亮背景）。</summary>
+    public bool SearchHitKey
+    {
+        get => _searchHitKey;
+        set { if (_searchHitKey != value) { _searchHitKey = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SearchHitKey))); } }
+    }
+
+    /// <summary>搜索命中：值匹配（黄色高亮背景）。</summary>
+    public bool SearchHitValue
+    {
+        get => _searchHitValue;
+        set { if (_searchHitValue != value) { _searchHitValue = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SearchHitValue))); } }
     }
 
     /// <summary>把该节点标记为选中，并将其整个子树标记为高亮。</summary>

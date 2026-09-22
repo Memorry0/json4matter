@@ -526,6 +526,98 @@ public partial class MainWindow : Window
         if (CopyToClipboard(node.ToJsonText())) SetStatus(StatusOk, "已复制该节点 JSON");
     }
 
+    // ---------- 搜索（键 / 值） ----------
+
+    private bool _lastSearchByKey = true;
+
+    private void OnSearchKey(object sender, RoutedEventArgs e) => RunSearch(byKey: true);
+    private void OnSearchValue(object sender, RoutedEventArgs e) => RunSearch(byKey: false);
+
+    private void OnSearchBoxKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            RunSearch(_lastSearchByKey);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Escape)
+        {
+            SearchBox.Clear();
+            e.Handled = true;
+        }
+    }
+
+    private void OnSearchBoxTextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (SearchBox.Text.Length == 0)
+            ClearSearchHits(); // 清空输入即撤销高亮
+    }
+
+    private void RunSearch(bool byKey)
+    {
+        _lastSearchByKey = byKey;
+        string q = SearchBox.Text.Trim();
+        if (_root is null)
+        {
+            SetStatus(StatusNeutral, "无内容可搜索");
+            return;
+        }
+        if (q.Length == 0)
+        {
+            ClearSearchHits();
+            SetStatus(StatusNeutral, "已清除搜索高亮");
+            return;
+        }
+
+        var chain = new List<JsonNodeVM>();
+        List<JsonNodeVM>? firstHit = null;
+        int hits = Walk(_root, chain, ref firstHit);
+
+        if (hits > 0 && firstHit is not null)
+            FindContainer(firstHit)?.BringIntoView();
+
+        SetStatus(hits > 0 ? StatusOk : StatusError,
+            $"{(byKey ? "键" : "值")}搜索「{q}」：{(hits > 0 ? $"{hits} 个匹配" : "无匹配")}");
+        return;
+
+        int Walk(JsonNodeVM node, List<JsonNodeVM> path, ref List<JsonNodeVM>? first)
+        {
+            path.Add(node);
+            int count = 0;
+            bool hit = byKey
+                ? node.Key is not null && node.Key.Contains(q, StringComparison.OrdinalIgnoreCase)
+                : node.IsScalar && (node.SlotText?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false);
+            if (byKey) node.SearchHitKey = hit; else node.SearchHitValue = hit;
+            if (hit)
+            {
+                count++;
+                // 展开祖先使命中可见
+                for (int i = 0; i < path.Count - 1; i++)
+                    path[i].IsExpanded = true;
+                first ??= path.ToList();
+            }
+            foreach (var c in node.Children)
+                count += Walk(c, path, ref first);
+            path.RemoveAt(path.Count - 1);
+            return count;
+        }
+    }
+
+    private void ClearSearchHits()
+    {
+        if (_root is null) return;
+        Clear(_root);
+        return;
+
+        static void Clear(JsonNodeVM n)
+        {
+            n.SearchHitKey = false;
+            n.SearchHitValue = false;
+            foreach (var c in n.Children)
+                Clear(c);
+        }
+    }
+
     // ---------- 多媒体固定卡片 ----------
 
     private void OnMediaClicked(object? sender, JsonNodeVM node)

@@ -218,13 +218,27 @@
             </Setter>
         </Style>
 
+        <!-- 搜索命中高亮（三主题通用暖黄） -->
+        <SolidColorBrush x:Key="SearchHitBrush" Color="#FFF7D66A"/>
+
         <!-- 树节点内容：key 近黑，值按类型着色 -->
         <HierarchicalDataTemplate DataType="{x:Type local:JsonNodeVM}"
                                   ItemsSource="{Binding Children}"
                                   xmlns:local="clr-namespace:JsonFormatter">
             <StackPanel Orientation="Horizontal" Margin="0,1">
                 <TextBlock Text="{Binding KeyText}" Foreground="{Binding KeyBrush}"
-                           FontWeight="{Binding KeyWeight}"/>
+                           FontWeight="{Binding KeyWeight}">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SearchHitKey}" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource SearchHitBrush}"/>
+                                    <Setter Property="Padding" Value="3,0.5"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
                 <TextBlock Text="&#160;:&#160;" Foreground="{DynamicResource InkHint}"
                            Visibility="{Binding SepVisibility}"/>
                 <ContentControl Content="{Binding}">
@@ -235,7 +249,18 @@
                                     <DataTemplate>
                                         <TextBlock Text="{Binding SlotText}" Foreground="{Binding SlotBrush}"
                                                    FontWeight="{Binding SlotWeight}" FontStyle="{Binding SlotStyle}"
-                                                   ToolTip="{Binding SlotTooltip}"/>
+                                                   ToolTip="{Binding SlotTooltip}">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding SearchHitValue}" Value="True">
+                                                            <Setter Property="Background" Value="{StaticResource SearchHitBrush}"/>
+                                                            <Setter Property="Padding" Value="3,0.5"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
                                     </DataTemplate>
                                 </Setter.Value>
                             </Setter>
@@ -383,10 +408,34 @@
                     <Border Grid.Row="0" Background="{DynamicResource BgHeader}"
                             BorderBrush="{DynamicResource LineSoft}" BorderThickness="0,0,0,1"
                             CornerRadius="9,9,0,0">
-                        <Grid Margin="14,0">
-                            <TextBlock Text="格式化结果" FontSize="12.5" FontWeight="SemiBold"
+                        <Grid Margin="14,0" VerticalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="格式化结果" FontSize="12.5" FontWeight="SemiBold"
                                        Foreground="{DynamicResource InkCaption}" VerticalAlignment="Center"/>
-                            <ToggleButton x:Name="HideEmptyToggle" Style="{StaticResource ChipToggle}"
+                            <!-- 搜索：一个输入框 + 键/值两个搜索按钮 -->
+                            <TextBox Grid.Column="1" x:Name="SearchBox" Width="148" Height="24" Margin="16,0,0,0"
+                                     VerticalContentAlignment="Center" FontSize="12"
+                                     FontFamily="Cascadia Mono, Consolas, Microsoft YaHei UI"
+                                     Foreground="{DynamicResource InkBody}" CaretBrush="{DynamicResource AccentBright}"
+                                     Background="White" BorderBrush="{DynamicResource LineStrong}"
+                                     BorderThickness="1" Padding="7,0"
+                                     AutomationProperties.Name="搜索框"
+                                     KeyDown="OnSearchBoxKeyDown" TextChanged="OnSearchBoxTextChanged"/>
+                            <Button Grid.Column="2" x:Name="SearchKeyBtn" Style="{StaticResource ToolButton}"
+                                    Content="键搜索" Height="24" FontSize="11.5" Padding="9,0" Margin="6,0,0,0"
+                                    VerticalAlignment="Center" Click="OnSearchKey"
+                                    AutomationProperties.Name="键搜索"/>
+                            <Button Grid.Column="3" x:Name="SearchValueBtn" Style="{StaticResource ToolButton}"
+                                    Content="值搜索" Height="24" FontSize="11.5" Padding="9,0" Margin="6,0,0,0"
+                                    VerticalAlignment="Center" Click="OnSearchValue"
+                                    AutomationProperties.Name="值搜索"/>
+                            <ToggleButton Grid.Column="4" x:Name="HideEmptyToggle" Style="{StaticResource ChipToggle}"
                                           Content="隐藏null值和空数组" HorizontalAlignment="Right"
                                           VerticalAlignment="Center" Click="OnHideEmptyToggle"/>
                         </Grid>
