@@ -221,7 +221,7 @@ public partial class MainWindow : Window
                     chain[i].IsExpanded = true;
                 ResultTree.ItemsSource = new[] { root };
                 ResultTree.UpdateLayout();
-                FindContainer(chain)?.BringIntoView();
+                FindContainerOrRealize(chain)?.BringIntoView();
             }
             else
             {
@@ -373,7 +373,11 @@ public partial class MainWindow : Window
         // 光标点在哪，右侧就定位到对应节点
         int caret = InputBox.GetCharacterIndexFromPoint(e.GetPosition(InputBox), snapToText: true);
         if (caret < 0) caret = InputBox.CaretIndex;
-        LocateFromCaret(caret);
+        // 等本轮鼠标 DOWN/UP 输入管线走完再定位：定位含展开+下钻+滚动的重活，
+        // 在 DOWN 处理中同步执行会让 UP 到达时命中元素已变化，WPF 捕获不释放、输入被吞。
+        // Background 优先级确保排在 UP 之后（Input 优先级仍可能抢在 UP 前执行）。
+        Dispatcher.BeginInvoke(() => LocateFromCaret(caret),
+            System.Windows.Threading.DispatcherPriority.Background);
     }
 
     private void LocateFromCaret(int caret)
@@ -403,7 +407,7 @@ public partial class MainWindow : Window
             chain[i].IsExpanded = true; // 逐级展开祖先
         if (node.HasChildren) node.IsExpanded = true;
 
-        var tvi = FindContainer(chain);
+        var tvi = FindContainerOrRealize(chain);
 
         if (tvi is not null)
         {
@@ -433,6 +437,12 @@ public partial class MainWindow : Window
         }
         return tvi;
     }
+
+    /// <summary>
+    /// 兼空壳：ResultTree 已改为静态关闭虚拟化（见 XAML 注释），展开节点的容器总是已生成，
+    /// 保留此名以少动调用点。
+    /// </summary>
+    private TreeViewItem? FindContainerOrRealize(List<JsonNodeVM> chain) => FindContainer(chain);
 
     /// <summary>
     /// 收集当前树的展开状态快照（前序序号）。按位置而非路径记录：
@@ -685,7 +695,7 @@ public partial class MainWindow : Window
             for (int i = 0; i < chain.Count; i++)
                 chain[i].IsExpanded = true;
             ResultTree.UpdateLayout();
-            FindContainer(chain)?.BringIntoView();
+            FindContainerOrRealize(chain)?.BringIntoView();
         }
         SetStatus(StatusOk, _hideEmpty ? "已隐藏 null 值和空数组" : "已显示全部字段");
     }
@@ -759,7 +769,7 @@ public partial class MainWindow : Window
             for (int i = 0; i < chain.Count; i++)
                 chain[i].IsExpanded = true;
             ResultTree.UpdateLayout();
-            FindContainer(chain)?.BringIntoView();
+            FindContainerOrRealize(chain)?.BringIntoView();
         }
     }
 

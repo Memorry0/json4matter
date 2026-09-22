@@ -442,11 +442,13 @@
                     </Border>
 
                     <Grid Grid.Row="1">
+                        <!-- 静态关闭虚拟化：默认折叠策略已限制展开节点数；
+                             开启虚拟化时大文件宽层数组的容器不生成，定位/搜索滚动会失效 -->
                         <TreeView x:Name="ResultTree" Background="White" BorderThickness="0"
                                   FontFamily="Cascadia Mono, Consolas, Microsoft YaHei UI"
-                                  Padding="8,6" VirtualizingPanel.IsVirtualizing="True"
-                                  VirtualizingPanel.VirtualizationMode="Recycling"
-                                  ScrollViewer.CanContentScroll="True"
+                                  Padding="8,6"
+                                  VirtualizingPanel.IsVirtualizing="False"
+                                  ScrollViewer.CanContentScroll="False"
                                   SelectedItemChanged="OnSelectedItemChanged"
                                   ContextMenuOpening="OnTreeContextMenuOpening">
                         </TreeView>
