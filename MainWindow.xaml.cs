@@ -442,7 +442,83 @@ public partial class MainWindow : Window
     /// 兼空壳：ResultTree 已改为静态关闭虚拟化（见 XAML 注释），展开节点的容器总是已生成，
     /// 保留此名以少动调用点。
     /// </summary>
-    private TreeViewItem? FindContainerOrRealize(List<JsonNodeVM> chain) => FindContainer(chain);
+    /// <summary>
+    /// 虚拟化下目标容器可能未生成（宽层数组/大文件）。按目标的前序扁平行索引滚动，
+    /// 让虚拟化面板在目标附近生成容器后再下钻取容器。
+    /// </summary>
+    private TreeViewItem? FindContainerOrRealize(List<JsonNodeVM> chain)
+    {
+        var tvi = FindContainer(chain);
+        if (tvi is not null) return tvi;
+        if (chain.Count < 2 || _root is null) return null;
+
+        int idx = FlatIndexOf(_root, chain[^1]);
+        var sv = FindScrollViewer(ResultTree);
+        if (idx < 0 || sv is null) return null;
+
+        // 分层虚拟化面板的 offset 是像素，且 extent 是估算值：迭代滚动逼近目标行
+        for (int round = 0; round < 3; round++)
+        {
+            int total = FlatCount(_root);
+            if (total <= 0 || sv.ExtentHeight <= 0) break;
+            double rowH = sv.ExtentHeight / total;
+            sv.ScrollToVerticalOffset(Math.Max(0, (idx - 3) * rowH));
+            ResultTree.UpdateLayout();
+            var t = FindContainer(chain);
+            if (t is not null) return t;
+        }
+        return null;
+    }
+
+    /// <summary>当前展开状态下的可见总行数（前序）。</summary>
+    private static int FlatCount(JsonNodeVM? root)
+    {
+        if (root is null) return 0;
+        int c = 0;
+        Walk(root);
+        return c;
+
+        void Walk(JsonNodeVM n)
+        {
+            c++;
+            if (n.IsExpanded)
+                foreach (var ch in n.Children)
+                    Walk(ch);
+        }
+    }
+
+    /// <summary>目标节点在当前展开状态下的前序扁平行索引（0 起）。</summary>
+    private static int FlatIndexOf(JsonNodeVM root, JsonNodeVM target)
+    {
+        int idx = 0;
+        return Walk(root);
+
+        int Walk(JsonNodeVM n)
+        {
+            if (ReferenceEquals(n, target)) return idx;
+            idx++;
+            if (n.IsExpanded)
+                foreach (var c in n.Children)
+                {
+                    var r = Walk(c);
+                    if (r >= 0) return r;
+                }
+            return -1;
+        }
+    }
+
+    private static System.Windows.Controls.ScrollViewer? FindScrollViewer(DependencyObject? v)
+    {
+        if (v is null) return null;
+        if (v is System.Windows.Controls.ScrollViewer sv) return sv;
+        int n = System.Windows.Media.VisualTreeHelper.GetChildrenCount(v);
+        for (int i = 0; i < n; i++)
+        {
+            var r = FindScrollViewer(System.Windows.Media.VisualTreeHelper.GetChild(v, i));
+            if (r is not null) return r;
+        }
+        return null;
+    }
 
     /// <summary>
     /// 收集当前树的展开状态快照（前序序号）。按位置而非路径记录：
@@ -584,7 +660,7 @@ public partial class MainWindow : Window
         int hits = Walk(_root, chain, ref firstHit);
 
         if (hits > 0 && firstHit is not null)
-            FindContainer(firstHit)?.BringIntoView();
+            FindContainerOrRealize(firstHit)?.BringIntoView();
 
         SetStatus(hits > 0 ? StatusOk : StatusError,
             $"{(byKey ? "键" : "值")}搜索「{q}」：{(hits > 0 ? $"{hits} 个匹配" : "无匹配")}");

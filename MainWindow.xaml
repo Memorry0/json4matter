@@ -442,13 +442,13 @@
                     </Border>
 
                     <Grid Grid.Row="1">
-                        <!-- 静态关闭虚拟化：默认折叠策略已限制展开节点数；
-                             开启虚拟化时大文件宽层数组的容器不生成，定位/搜索滚动会失效 -->
+                        <!-- 虚拟化必须开：非虚拟化下几百节点全展开会一次性生成全部行容器（600 节点≈2s 卡顿）。
+                             大文件定位的容器缺失问题由 FindContainerOrRealize 的扁平索引滚动解决。 -->
                         <TreeView x:Name="ResultTree" Background="White" BorderThickness="0"
                                   FontFamily="Cascadia Mono, Consolas, Microsoft YaHei UI"
-                                  Padding="8,6"
-                                  VirtualizingPanel.IsVirtualizing="False"
-                                  ScrollViewer.CanContentScroll="False"
+                                  Padding="8,6" VirtualizingPanel.IsVirtualizing="True"
+                                  VirtualizingPanel.VirtualizationMode="Recycling"
+                                  ScrollViewer.CanContentScroll="True"
                                   SelectedItemChanged="OnSelectedItemChanged"
                                   ContextMenuOpening="OnTreeContextMenuOpening">
                         </TreeView>
