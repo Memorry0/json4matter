@@ -1,0 +1,56 @@
+<UserControl x:Class="JsonFormatter.Media.Controls.MediaValueControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             IsHitTestVisible="True">
+    <Grid>
+        <TextBlock x:Name="ValueText"
+                   Text="{Binding SlotText}"
+                   Foreground="{Binding SlotBrush}"
+                   FontWeight="{Binding SlotWeight}"
+                   FontStyle="{Binding SlotStyle}"
+                   Cursor="Hand"
+                   TextTrimming="CharacterEllipsis" MaxWidth="720"
+                   MouseEnter="OnMouseEnter" MouseLeave="OnMouseLeave"
+                   PreviewMouseLeftButtonDown="OnClicked">
+            <TextBlock.TextDecorations>
+                <TextDecoration Location="Underline" PenOffset="2">
+                    <TextDecoration.Pen>
+                        <Pen Brush="#80808080" Thickness="1">
+                            <Pen.DashStyle>
+                                <DashStyle Dashes="2,2" Offset="0"/>
+                            </Pen.DashStyle>
+                        </Pen>
+                    </TextDecoration.Pen>
+                </TextDecoration>
+            </TextBlock.TextDecorations>
+        </TextBlock>
+
+        <!-- 悬浮预览：图片缩略 / pdf·视频信息 -->
+        <Popup x:Name="Hover"
+               AllowsTransparency="True" StaysOpen="False"
+               Placement="MousePoint" PopupAnimation="Fade"
+               VerticalOffset="14">
+            <Border Background="{DynamicResource BgSurface}"
+                    BorderBrush="{DynamicResource LineStrong}" BorderThickness="1"
+                    CornerRadius="10" Padding="12" Margin="18,4,18,18"
+                    MaxWidth="360">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="14" ShadowDepth="2" Opacity="0.18"/>
+                </Border.Effect>
+                <StackPanel>
+                    <Image x:Name="HoverImage" MaxWidth="336" MaxHeight="252"
+                           Stretch="Uniform" StretchDirection="Both"
+                           RenderOptions.BitmapScalingMode="HighQuality"/>
+                    <TextBlock x:Name="HoverTitle" FontWeight="SemiBold" FontSize="12"
+                               Foreground="{DynamicResource InkCaption}"
+                               TextTrimming="CharacterEllipsis" MaxWidth="336"/>
+                    <TextBlock x:Name="HoverMeta" FontSize="11"
+                               Foreground="{DynamicResource InkHint}"/>
+                    <TextBlock x:Name="HoverState" FontSize="11" FontStyle="Italic"
+                               Foreground="{DynamicResource InkHint}"
+                               Text="加载中…"/>
+                </StackPanel>
+            </Border>
+        </Popup>
+    </Grid>
+</UserControl>

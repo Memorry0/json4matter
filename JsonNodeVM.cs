@@ -27,6 +27,11 @@ public sealed class JsonNodeVM : INotifyPropertyChanged
     public bool IsValueModified { get; private set; }
     /// <summary>该子树是否含非空内容（隐藏空值时用于过滤）。</summary>
     public bool HasContent { get; private set; }
+    /// <summary>值为可预览的媒体 URL（多媒体开关开启时）。</summary>
+    public bool IsMediaUrl => MediaKind != Media.MediaKind.None;
+    public Media.MediaKind MediaKind { get; private set; } = Media.MediaKind.None;
+    /// <summary>未截断的原始 URL。</summary>
+    public string? UrlValue { get; private set; }
     /// <summary>用于修改对比的规范值：字符串取解码后的内容（与 \uXXXX 转义形式无关），其余用原始文本。</summary>
     public string ScalarCompare { get; private set; } = "";
     public bool IsScalar => ScalarRaw is not null;
@@ -193,6 +198,13 @@ public sealed class JsonNodeVM : INotifyPropertyChanged
         switch (e.ValueKind)
         {
             case JsonValueKind.String:
+                // 媒体 URL 识别（截断展示不影响原始 URL）
+                if (Media.MediaSupport.Enabled)
+                {
+                    vm.MediaKind = Media.UrlMedia.Detect(raw);
+                    if (vm.MediaKind != Media.MediaKind.None)
+                        vm.UrlValue = raw;
+                }
                 string escaped = Escape(raw);
                 if (escaped.Length > 268)
                 {

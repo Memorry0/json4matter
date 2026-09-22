@@ -147,8 +147,32 @@
                 <TextBlock Text="下次启动窗口时最大化" FontSize="11" Margin="0,3,0,0"
                            Foreground="{DynamicResource InkHint}"/>
             </StackPanel>
-            <ToggleButton x:Name="FullscreenSwitch" Grid.Column="1" Style="{StaticResource SwitchToggle}"
+            <ToggleButton x:Name="FullscreenSwitch" Grid.Column="1" Style="{StaticResource SwitchToggle}" AutomationProperties.Name="默认全屏开关"
                           VerticalAlignment="Center" Checked="OnFullscreenChanged" Unchecked="OnFullscreenChanged"/>
+        </Grid>
+
+        <Rectangle Height="1" Fill="{DynamicResource LineSoft}" Margin="0,16"/>
+
+        <!-- 多媒体支持 -->
+        <Grid Margin="0,16,0,2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Text="多媒体支持" FontSize="12.5" FontWeight="SemiBold"
+                           Foreground="{DynamicResource InkCaption}"/>
+                <TextBlock Text="识别 URL 中的图片/PDF/视频，悬浮预览与播放" FontSize="11" Margin="0,3,0,0"
+                           Foreground="{DynamicResource InkHint}"/>
+            </StackPanel>
+            <Button x:Name="HelpButton" Grid.Column="1" Width="22" Height="22" Margin="0,0,12,0"
+                    Content="?" FontSize="12" FontWeight="Bold" Cursor="Hand"
+                    Background="Transparent" BorderThickness="0"
+                    Foreground="{DynamicResource InkHint}"
+                    AutomationProperties.Name="多媒体支持说明" Click="OnHelpClicked"/>
+            <ToggleButton x:Name="MediaSwitch" Grid.Column="2" Style="{StaticResource SwitchToggle}" AutomationProperties.Name="多媒体支持开关"
+                          VerticalAlignment="Center" Checked="OnMediaChanged" Unchecked="OnMediaChanged"/>
         </Grid>
 
     </StackPanel>

@@ -8,6 +8,7 @@ public sealed class AppSettings
     public string Theme { get; set; } = "Green";
     public double FontSize { get; set; } = 13;
     public bool DefaultFullscreen { get; set; }
+    public bool EnableMedia { get; set; }
 }
 
 public static class Settings

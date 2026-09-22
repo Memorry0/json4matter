@@ -102,9 +102,29 @@ public partial class MainWindow : Window
         Closed += (_, _) => _doc?.Dispose();
         ResultTree.ContextMenu = BuildTreeMenu();
 
+        // 多媒体卡片：值点击打开、点卡片外/Esc 关闭
+        Media.Controls.MediaValueControl.MediaClicked += OnMediaClicked;
+        PreviewMouseLeftButtonDown += OnGlobalPreviewMouseDown;
+        PreviewKeyDown += OnWindowPreviewKeyDown;
+
         ApplyFontSize(Settings.Data.FontSize, save: false);
         if (Settings.Data.DefaultFullscreen)
             WindowState = WindowState.Maximized;
+
+        // 上次会话已开启多媒体：启动即生效，并后台预热解码组件
+        Media.MediaSupport.Enabled = Settings.Data.EnableMedia;
+        if (Settings.Data.EnableMedia)
+        {
+            _ = Task.Run(async () =>
+            {
+                await Media.PluginManager.EnsureReadyAsync();
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    if (Media.PluginManager.Ready)
+                        SetStatus(StatusOk, "多媒体组件就绪");
+                });
+            });
+        }
 
         InputBox.Focus();
     }
@@ -506,6 +526,54 @@ public partial class MainWindow : Window
         if (CopyToClipboard(node.ToJsonText())) SetStatus(StatusOk, "已复制该节点 JSON");
     }
 
+    // ---------- 多媒体固定卡片 ----------
+
+    private void OnMediaClicked(object? sender, JsonNodeVM node)
+    {
+        OpenMediaCard(node);
+    }
+
+    private void OpenMediaCard(JsonNodeVM node)
+    {
+        var card = new Media.Controls.MediaCard();
+        card.Closed += (_, _) => CloseMediaCard();
+        MediaCardHost.Content = card;
+        MediaCardHost.Visibility = Visibility.Visible;
+        card.Bind(node);
+    }
+
+    private void CloseMediaCard()
+    {
+        if (MediaCardHost.Content is Media.Controls.MediaCard card)
+        {
+            MediaCardHost.Content = null;
+        }
+        MediaCardHost.Visibility = Visibility.Collapsed;
+    }
+
+    /// <summary>Esc 关闭多媒体固定卡片。</summary>
+    private void OnWindowPreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape && MediaCardHost.Content is Media.Controls.MediaCard)
+        {
+            CloseMediaCard();
+            e.Handled = true;
+        }
+    }
+
+    /// <summary>点在卡片外任意处 → 关闭固定卡片。</summary>
+    private void OnGlobalPreviewMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (MediaCardHost.Content is not Media.Controls.MediaCard) return;
+        var v = e.OriginalSource as DependencyObject;
+        while (v is not null)
+        {
+            if (ReferenceEquals(v, MediaCardHost.Content)) return; // 点在卡片内
+            v = System.Windows.Media.VisualTreeHelper.GetParent(v);
+        }
+        CloseMediaCard();
+    }
+
     // ---------- 隐藏空值 ----------
 
     private void OnHideEmptyToggle(object sender, RoutedEventArgs e)
@@ -553,6 +621,54 @@ public partial class MainWindow : Window
         _root?.ApplyPaletteRecursive();
         Settings.Data.Theme = id;
         Settings.Save();
+    }
+
+    /// <summary>多媒体开关：开启时异步拉取组件并重建树生效。</summary>
+    private void OnMediaToggled(bool on)
+    {
+        Media.MediaSupport.Enabled = on;
+        if (on)
+        {
+            SetStatus(StatusOk, "多媒体支持已开启，正在准备组件…");
+            _ = Task.Run(async () =>
+            {
+                await Media.PluginManager.EnsureReadyAsync();
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    if (Media.PluginManager.Ready)
+                        SetStatus(StatusOk, "多媒体组件就绪");
+                    else
+                        SetStatus(StatusError, "多媒体组件下载失败：" + Media.PluginManager.Error + "（图片/PDF/视频基本信息仍可用）");
+                    RebuildTreeForMedia();
+                });
+            });
+        }
+        else
+        {
+            SetStatus(StatusOk, "多媒体支持已关闭");
+        }
+        RebuildTreeForMedia();
+    }
+
+    /// <summary>开关变化后按当前 _doc 重建树（重新做媒体识别）。</summary>
+    private void RebuildTreeForMedia()
+    {
+        if (_doc is null) return;
+        int count = 0;
+        var node = JsonNodeVM.Root(_doc.RootElement, _hideEmpty, ref count);
+        node.MarkDiff(_originBaseline);
+        var snapshot = CollectExpanded(_root);
+        { int ri = 0; RestoreExpanded(node, ref ri, snapshot); }
+        var chain = FindFirstModifiedChain(node);
+        _root = node;
+        ResultTree.ItemsSource = new[] { node };
+        if (chain is not null)
+        {
+            for (int i = 0; i < chain.Count; i++)
+                chain[i].IsExpanded = true;
+            ResultTree.UpdateLayout();
+            FindContainer(chain)?.BringIntoView();
+        }
     }
 
     public void ApplyFontSize(double size, bool save = true)
