@@ -191,7 +191,7 @@ public sealed class JsonNodeVM : INotifyPropertyChanged
                 break;
 
             default:
-                SetScalar(vm, e);
+                SetScalar(vm, e, hideEmpty, ref nodeCount);
                 break;
         }
 
@@ -200,7 +200,7 @@ public sealed class JsonNodeVM : INotifyPropertyChanged
             : vm.Children.Count > 0;
     }
 
-    private static void SetScalar(JsonNodeVM vm, JsonElement e)
+    private static void SetScalar(JsonNodeVM vm, JsonElement e, bool hideEmpty, ref int nodeCount)
     {
         string raw = e.ValueKind switch
         {
@@ -233,6 +233,7 @@ public sealed class JsonNodeVM : INotifyPropertyChanged
                     vm.SlotText = escaped;
                 }
                 vm.SlotBrush = ThemeManager.Current.String;
+                TryBuildNestedJson(vm, raw, hideEmpty, ref nodeCount);
                 break;
             case JsonValueKind.Number:
                 vm.SlotText = raw;
@@ -248,6 +249,58 @@ public sealed class JsonNodeVM : INotifyPropertyChanged
                 vm.SlotBrush = ThemeManager.Current.Null;
                 vm.SlotStyle = FontStyles.Italic;
                 break;
+        }
+    }
+
+    /// <summary>
+    /// 内嵌转义 JSON：字符串值的内容本身是对象/数组时，解析并生成虚拟子树（值行仍显示原转义文本，可展开查看）。
+    /// </summary>
+    private static void TryBuildNestedJson(JsonNodeVM vm, string raw, bool hideEmpty, ref int nodeCount)
+    {
+        // 快速预筛：第一个非空白字符须是 { 或 [
+        char c0 = '\0';
+        for (int i = 0; i < raw.Length; i++)
+        {
+            if (!char.IsWhiteSpace(raw[i])) { c0 = raw[i]; break; }
+        }
+        if (c0 is not ('{' or '[')) return;
+
+        try
+        {
+            using var inner = JsonDocument.Parse(raw, new JsonDocumentOptions
+            {
+                AllowTrailingCommas = true,
+                CommentHandling = JsonCommentHandling.Skip,
+                MaxDepth = 256,
+            });
+            if (inner.RootElement.ValueKind is not (JsonValueKind.Object or JsonValueKind.Array))
+                return;
+
+            // Clone 脱离临时文档生命周期后按常规容器构建子树
+            var cloned = inner.RootElement.Clone();
+            if (cloned.ValueKind == JsonValueKind.Object)
+            {
+                foreach (var prop in cloned.EnumerateObject())
+                {
+                    var child = Child(prop.Name, prop.Value, hideEmpty, ref nodeCount);
+                    if (!hideEmpty || child.HasContent)
+                        vm.Children.Add(child);
+                }
+            }
+            else
+            {
+                int idx = 0;
+                foreach (var item in cloned.EnumerateArray())
+                {
+                    var child = Child($"[{idx++}]", item, hideEmpty, ref nodeCount);
+                    if (!hideEmpty || child.HasContent)
+                        vm.Children.Add(child);
+                }
+            }
+        }
+        catch (JsonException)
+        {
+            // 不是合法 JSON：按普通字符串处理
         }
     }
 

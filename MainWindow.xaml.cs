@@ -179,11 +179,35 @@ public partial class MainWindow : Window
                 MaxDepth = 1024,
             };
 
-            (JsonDocument doc, JsonNodeVM root, string pretty, int nodeCount, long ms, List<JsonNodeVM>? chain) =
+            (JsonDocument doc, JsonNodeVM root, string pretty, int nodeCount, long ms, List<JsonNodeVM>? chain, int unwrap) =
                 await Task.Run(() =>
                 {
                     var sw = Stopwatch.StartNew();
                     var d = JsonDocument.Parse(text, options);
+
+                    // 整段输入是转义 JSON 字符串（如接口日志里拷出的 "{...}"）：自动剥层格式化内层
+                    int unwrap = 0;
+                    while (unwrap < 5 && d.RootElement.ValueKind == JsonValueKind.String)
+                    {
+                        string inner = d.RootElement.GetString() ?? "";
+                        string t = inner.TrimStart();
+                        if (t.Length == 0 || (t[0] != '{' && t[0] != '[')) break;
+                        JsonDocument? next = null;
+                        try
+                        {
+                            next = JsonDocument.Parse(inner, options);
+                            if (next.RootElement.ValueKind is not (JsonValueKind.Object or JsonValueKind.Array))
+                            {
+                                next.Dispose();
+                                break;
+                            }
+                        }
+                        catch (JsonException) { break; }
+                        unwrap++;
+                        d.Dispose();
+                        d = next;
+                    }
+
                     int count = 0;
                     var node = JsonNodeVM.Root(d.RootElement, hide, ref count);
                     node.MarkDiff(baseline);
@@ -197,7 +221,7 @@ public partial class MainWindow : Window
                     var chain = fresh ? null : FindFirstModifiedChain(node);
                     sw.Stop();
                     string p = JsonSerializer.Serialize(d.RootElement, IndentOptions);
-                    return (d, node, p, count, sw.ElapsedMilliseconds, chain);
+                    return (d, node, p, count, sw.ElapsedMilliseconds, chain, unwrap);
                 });
 
             if (seq != _seq)
@@ -228,7 +252,8 @@ public partial class MainWindow : Window
                 ResultTree.ItemsSource = new[] { root };
             }
             EmptyHint.Visibility = Visibility.Collapsed;
-            SetStatus(StatusOk, $"✔ 解析成功 · {nodeCount:N0} 个节点 · {ms} ms");
+            SetStatus(StatusOk, $"✔ 解析成功 · {nodeCount:N0} 个节点 · {ms} ms" +
+                (unwrap > 0 ? $"（已解包 {unwrap} 层转义字符串）" : ""));
             ShowSize(text);
         }
         catch (JsonException ex)
