@@ -35,14 +35,15 @@
             </TextBlock.TextDecorations>
         </TextBlock>
 
-        <!-- 悬浮预览：图片缩略 / pdf·视频信息 -->
+        <!-- 悬浮预览：图片缩略 / pdf·视频信息（StaysOpen 手动管理：False 会在打开时捕获鼠标导致闪烁） -->
         <Popup x:Name="Hover"
-               AllowsTransparency="True" StaysOpen="False"
+               AllowsTransparency="True" StaysOpen="True"
                Placement="MousePoint" PopupAnimation="Fade"
                VerticalOffset="14">
             <Border Background="{DynamicResource BgSurface}"
                     BorderBrush="{DynamicResource LineStrong}" BorderThickness="1"
                     CornerRadius="10" Padding="12" Margin="18,4,18,18"
+                    MouseEnter="OnHoverEnter" MouseLeave="OnHoverLeave"
                     MaxWidth="360">
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="14" ShadowDepth="2" Opacity="0.18"/>

@@ -152,18 +152,16 @@ public partial class MediaCard : UserControl
 
     private void OnPlayPause(object sender, RoutedEventArgs e)
     {
-        if (Player.Clock is not null || Player.Position < Player.NaturalDuration.TimeSpan)
+        // 流式/未加载完的源 NaturalDuration 是 Automatic（无 TimeSpan），直接切换播放态即可
+        if (PlayButton.Content.ToString() == "▶")
         {
-            if (PlayButton.Content.ToString() == "▶")
-            {
-                Player.Play();
-                PlayButton.Content = "⏸";
-            }
-            else
-            {
-                Player.Pause();
-                PlayButton.Content = "▶";
-            }
+            Player.Play();
+            PlayButton.Content = "⏸";
+        }
+        else
+        {
+            Player.Pause();
+            PlayButton.Content = "▶";
         }
     }
 

@@ -10,6 +10,8 @@ namespace JsonFormatter.Media.Controls;
 public partial class MediaValueControl : UserControl
 {
     private readonly DispatcherTimer _hoverDelay;
+    /// <summary>鼠标离开 URL/悬浮层后的延迟关闭（StaysOpen 的 Popup 需手动管理，且防鼠标在两者间隙抖动时闪烁）。</summary>
+    private readonly DispatcherTimer _leaveDelay;
     private JsonNodeVM? Node => DataContext as JsonNodeVM;
     private bool _loading;
     private bool _suppressHover;
@@ -21,7 +23,9 @@ public partial class MediaValueControl : UserControl
         InitializeComponent();
         _hoverDelay = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
         _hoverDelay.Tick += (_, _) => { _hoverDelay.Stop(); OpenHover(); };
-        Unloaded += (_, _) => { _hoverDelay.Stop(); Hover.IsOpen = false; };
+        _leaveDelay = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(280) };
+        _leaveDelay.Tick += (_, _) => { _leaveDelay.Stop(); CloseHover(); };
+        Unloaded += (_, _) => { _hoverDelay.Stop(); _leaveDelay.Stop(); Hover.IsOpen = false; };
     }
 
     /// <summary>暴露 InvokePattern：UIA/辅助工具可直接“点击”媒体值（也方便自动化测试）。</summary>
@@ -53,6 +57,7 @@ public partial class MediaValueControl : UserControl
 
     private void OnMouseEnter(object sender, MouseEventArgs e)
     {
+        _leaveDelay.Stop();
         if (Node?.UrlValue is null || _suppressHover) return;
         _hoverDelay.Stop();
         _hoverDelay.Start();
@@ -61,6 +66,22 @@ public partial class MediaValueControl : UserControl
     private void OnMouseLeave(object sender, MouseEventArgs e)
     {
         _hoverDelay.Stop();
+        _leaveDelay.Stop();
+        _leaveDelay.Start();
+    }
+
+    /// <summary>鼠标进入悬浮层：取消关闭。</summary>
+    private void OnHoverEnter(object sender, MouseEventArgs e) => _leaveDelay.Stop();
+
+    /// <summary>鼠标离开悬浮层：延迟关闭（给移回 URL 的机会）。</summary>
+    private void OnHoverLeave(object sender, MouseEventArgs e)
+    {
+        _leaveDelay.Stop();
+        _leaveDelay.Start();
+    }
+
+    private void CloseHover()
+    {
         Hover.IsOpen = false;
         _suppressHover = false;
     }
@@ -69,7 +90,7 @@ public partial class MediaValueControl : UserControl
     {
         if (Node?.UrlValue is null) return;
         _hoverDelay.Stop();
-        Hover.IsOpen = false;
+        _leaveDelay.Stop();
         _suppressHover = true; // 点击后抑制悬浮，直到鼠标移走
         MediaClicked?.Invoke(this, Node);
         e.Handled = true;
