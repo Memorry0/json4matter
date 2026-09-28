@@ -1,4 +1,4 @@
-# JSON 格式化工具 — 功能清单
+# json4matter — 功能清单
 
 一个面向 Windows 桌面的 JSON 查看 / 格式化工具（WPF + .NET 8，单文件 exe 约 300KB，启动即用）。
 定位：开发与联调时快速粘贴接口返回的 JSON，看清结构、找到数据、对比改动。
@@ -103,4 +103,6 @@ dotnet publish -c Release -r win-x64 --self-contained false \
   -p:PublishSingleFile=true -p:PublishReadyToRun=false
 ```
 
-产物：`bin/Release/net8.0-windows/win-x64/publish/JsonFormatter.exe`（约 300KB，需已装 .NET 8 Desktop Runtime）
+发布后把产物重命名为 `json4matter_<版本>.exe`（当前 **[json4matter_0.0.1.exe](https://github.com/Memorry0/json4matter/raw/main/json4matter_0.0.1.exe)** 已随仓库提供，约 300KB，需已装 .NET 8 Desktop Runtime）。
+
+> 程序运行数据（设置/插件缓存）存放于 `%APPDATA%\JsonFormatter\`（程序内部目录名，与仓库名无关）。

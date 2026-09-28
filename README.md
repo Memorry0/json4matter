@@ -1,6 +1,14 @@
-# JsonFormatter
+# json4matter
 
 Windows 桌面 JSON 格式化查看器 — WPF + .NET 8，单文件 exe，启动 < 1 秒
+
+## 下载
+
+**[⬇ 下载 json4matter_0.0.1.exe](https://github.com/Memorry0/json4matter/raw/main/json4matter_0.0.1.exe)**（约 300KB）
+
+- Windows 10/11 x64，绿色单文件、免安装、双击即用
+- 需已安装 [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0)（仅首次）
+- 完整功能清单见 [FEATURES.md](FEATURES.md)
 
 ## 功能
 
@@ -33,15 +41,17 @@ dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=
 ## 项目结构
 
 ```
-JsonFormatter/
-├── App.xaml(.cs)        # 应用入口、主题资源、全局异常日志
-├── MainWindow.axanl(.cs)# 主窗口：布局、解析、定位、diff、压缩
-├── SettingsWindow.xaml  # 设置窗口（主题/字号/全屏）
-├── Themes/              # 三套主题资源字典（Token 化配色）
-├── ThemeManager.cs      # 主题切换（chrome 字典 + 树 VM 配色）
-├── JsonNodeVM.cs        # 树节点视图模型（标数/diff/高亮/隐藏null值）
-├── JsonPathLocator.cs   # 源码光标 → JSON 路径的词法扫描器
-└── Settings.cs          # 设置持久化
+json4matter/
+├── json4matter_0.0.1.exe  # 预编译版（直接下载即用）
+├── App.xaml(.cs)          # 应用入口、主题资源、全局异常日志
+├── MainWindow.xaml(.cs)   # 主窗口：布局、解析、定位、diff、搜索、压缩
+├── SettingsWindow.xaml    # 设置窗口（主题/字号/全屏/多媒体）
+├── Themes/                # 三套主题资源字典（Token 化配色）
+├── ThemeManager.cs        # 主题切换（chrome 字典 + 树 VM 配色）
+├── JsonNodeVM.cs          # 树节点视图模型（标数/diff/搜索高亮/内嵌JSON）
+├── JsonPathLocator.cs     # 源码光标 → JSON 路径的词法扫描器
+├── Media/                 # 多媒体预览（URL识别/卡片/插件下载/解码器）
+└── Settings.cs            # 设置持久化
 ```
 
 ## 设计
