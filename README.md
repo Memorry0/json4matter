@@ -10,6 +10,12 @@ Windows 桌面 JSON 格式化查看器 — WPF + .NET 8，单文件 exe，启动
 - 需已安装 [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0)（仅首次）
 - 完整功能清单见 [FEATURES.md](FEATURES.md)
 
+## 界面预览
+
+![主界面](docs/screenshot-main.png)
+
+![设置与多媒体支持说明](docs/screenshot-settings.png)
+
 ## 功能
 
 完整清单见 [FEATURES.md](FEATURES.md)。速览：
